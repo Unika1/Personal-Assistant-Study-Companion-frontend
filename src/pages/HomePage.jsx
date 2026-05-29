@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 
 // Meaningful landing page for first-time visitors.
 function HomePage() {
+  // Simple client-side check for login state using the token stored by LoginPage.
+  // This keeps the landing hero consistent with the header without needing app-wide state.
+  const isLoggedIn = Boolean(typeof window !== 'undefined' && localStorage.getItem('token'));
   return (
     <div style={{ maxWidth: '1050px', margin: '0 auto', padding: '40px 20px 60px' }}>
       <section
@@ -23,30 +26,50 @@ function HomePage() {
         </p>
 
         <div style={{ marginTop: '26px', display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <Link
-            to="/signup"
-            style={{
-              background: '#ffffff',
-              color: '#4338ca',
-              padding: '12px 18px',
-              borderRadius: '10px',
-              fontWeight: 700,
-            }}
-          >
-            Create Account
-          </Link>
-          <Link
-            to="/login"
-            style={{
-              border: '1px solid rgba(255,255,255,0.6)',
-              color: '#ffffff',
-              padding: '12px 18px',
-              borderRadius: '10px',
-              fontWeight: 700,
-            }}
-          >
-            Login
-          </Link>
+          {!isLoggedIn ? (
+            <>
+              <Link
+                to="/signup"
+                style={{
+                  background: '#ffffff',
+                  color: '#4338ca',
+                  padding: '12px 18px',
+                  borderRadius: '10px',
+                  fontWeight: 700,
+                }}
+              >
+                Create Account
+              </Link>
+              <Link
+                to="/login"
+                style={{
+                  border: '1px solid rgba(255,255,255,0.6)',
+                  color: '#ffffff',
+                  padding: '12px 18px',
+                  borderRadius: '10px',
+                  fontWeight: 700,
+                }}
+              >
+                Login
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/chat"
+                style={{
+                  background: '#10b981',
+                  color: '#ffffff',
+                  padding: '12px 18px',
+                  borderRadius: '10px',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                }}
+              >
+                Go to Chat
+              </Link>
+            </>
+          )}
         </div>
       </section>
 
