@@ -23,7 +23,7 @@ function AppHeader() {
   return (
     <header className="app-header">
       <div className="nav-left">
-        <div className="app-logo">PASC 📚</div>
+        <div className="app-logo">PASC</div>
       </div>
 
       <nav className="app-nav" aria-label="Primary">
