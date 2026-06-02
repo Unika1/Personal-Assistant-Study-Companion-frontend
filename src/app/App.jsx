@@ -22,39 +22,42 @@ function AppHeader() {
 
   return (
     <header className="app-header">
-      <div className="app-branding">
-        <h1 className="app-title">PASC</h1>
-        <p className="app-subtitle">Personal AI Study Companion</p>
+      <div className="nav-left">
+        <div className="app-logo">PASC 📚</div>
       </div>
 
       <nav className="app-nav" aria-label="Primary">
-        <NavLink to="/" className={({ isActive }) => `app-link ${isActive ? 'active' : ''}`} end>
-          Home
-        </NavLink>
+        <div className="nav-center">
+          <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} end>
+            Home
+          </NavLink>
 
-        {/* Only show Login and Signup when the user is not logged in. */}
-        {!isLoggedIn && (
-          <>
-            <NavLink to="/login" className={({ isActive }) => `app-link ${isActive ? 'active' : ''}`}>
-              Login
-            </NavLink>
+          <NavLink to="/chat" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            Chat
+          </NavLink>
 
-            <NavLink to="/signup" className={({ isActive }) => `app-link ${isActive ? 'active' : ''}`}>
-              Signup
-            </NavLink>
-          </>
-        )}
+          {/* Only show Login and Signup when the user is not logged in. */}
+          {!isLoggedIn && (
+            <>
+              <NavLink to="/login" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                Login
+              </NavLink>
 
-        <NavLink to="/chat" className={({ isActive }) => `app-link ${isActive ? 'active' : ''}`}>
-          Chat
-        </NavLink>
+              <NavLink to="/signup" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                Signup
+              </NavLink>
+            </>
+          )}
+        </div>
 
-        {/* Show Logout only after login. */}
-        {isLoggedIn && (
-          <button type="button" className="app-link" onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-            Logout
-          </button>
-        )}
+        <div className="nav-right">
+          {isLoggedIn ? (
+            <>
+              <span className="user-name">{localStorage.getItem('name') || 'Account'}</span>
+              <button type="button" className="logout-btn" onClick={handleLogout}>Logout</button>
+            </>
+          ) : null}
+        </div>
       </nav>
     </header>
   );
