@@ -76,7 +76,7 @@ function LoginPage() {
 
       <div style={styles.card}>
         <div style={styles.header}>
-          <div style={styles.logoBadge}>PASC 📚</div>
+          <div style={styles.logoBadge}>PASC</div>
           <h1 style={styles.title}>Welcome back</h1>
           <p style={styles.subtitle}>Your Personal AI Study Companion</p>
         </div>
