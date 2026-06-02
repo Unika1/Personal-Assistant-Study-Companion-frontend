@@ -657,9 +657,7 @@ a {
   margin: 0;
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
+/*RESPONSIVE DESIGN*/
 @media (max-width: 768px) {
   .app-header {
     flex-direction: column;
