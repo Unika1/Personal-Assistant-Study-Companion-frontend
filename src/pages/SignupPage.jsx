@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 // This page lets the user create a new account.
 function SignupPage() {
@@ -107,53 +108,110 @@ function SignupPage() {
   };
 
   return (
-    <div className="signup-page">
-      <div className="signup-card">
-        <div className="signup-header">
-          <div className="signup-logo">PASC</div>
-          <h2 className="signup-title">Create your account</h2>
-          <p className="signup-subtitle">Join PASC and start your study journey.</p>
+    <div style={styles.page}>
+      <div style={styles.overlay} />
+      <div style={styles.card}>
+        <div style={styles.header}>
+          <div style={styles.logoBadge}>PASC </div>
+          <h1 style={styles.title}>Create your account</h1>
+          <p style={styles.subtitle}>Your Personal AI Study Companion</p>
         </div>
 
         {/* Show error message if signup fails */}
-        {error && <p className="auth-message auth-error">{error}</p>}
+        {error && <p style={{ ...styles.message, ...styles.error }}>{error}</p>}
 
         {/* Show success message if signup works */}
-        {success && <p className="auth-message auth-success">{success}</p>}
+        {success && <p style={{ ...styles.message, ...styles.success }}>{success}</p>}
 
-        <form onSubmit={handleSignup} className="signup-form">
-          <div className="signup-name-row">
-            <div className="auth-field">
-              <label htmlFor="firstName">First Name</label>
-              <input id="firstName" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="auth-input" />
+        <form onSubmit={handleSignup} style={styles.form}>
+          <div style={styles.row}>
+            <div style={styles.field}>
+              <label htmlFor="firstName" style={styles.label}>First Name</label>
+              <input id="firstName" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="auth-input" style={styles.input} />
             </div>
 
-            <div className="auth-field">
-              <label htmlFor="lastName">Last Name</label>
-              <input id="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className="auth-input" />
+            <div style={styles.field}>
+              <label htmlFor="lastName" style={styles.label}>Last Name</label>
+              <input id="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className="auth-input" style={styles.input} />
             </div>
           </div>
 
-          <div className="auth-field">
-            <label htmlFor="email">Email</label>
-            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="auth-input" />
+          <div style={styles.field}>
+            <label htmlFor="email" style={styles.label}>Email</label>
+            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="auth-input" style={styles.input} />
           </div>
 
-          <div className="auth-field">
-            <label htmlFor="password">Password</label>
-            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="auth-input" />
+          <div style={styles.field}>
+            <label htmlFor="password" style={styles.label}>Password</label>
+            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="auth-input" style={styles.input} />
           </div>
 
-          <div className="auth-field">
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="auth-input" />
+          <div style={styles.field}>
+            <label htmlFor="confirmPassword" style={styles.label}>Confirm Password</label>
+            <input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="auth-input" style={styles.input} />
           </div>
 
-          <button type="submit" className="auth-button primary">Signup</button>
+          <button type="submit" className="auth-button primary" style={styles.button}>Signup</button>
         </form>
+
+        <p style={styles.footerText}>
+          Already have an account?{' '}
+          <Link to="/login" style={styles.footerLink}>Log in</Link>
+        </p>
       </div>
     </div>
   );
 }
+
+const styles = {
+  page: {
+    minHeight: 'calc(100vh - 96px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '32px 20px',
+    background: 'linear-gradient(135deg, #6C3FC5 0%, #4A90D9 100%)',
+  },
+  overlay: {
+    position: 'absolute',
+    inset: 0,
+    background: 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+  },
+  card: {
+    position: 'relative',
+    zIndex: 1,
+    width: '100%',
+    maxWidth: '620px',
+    background: '#ffffff',
+    borderRadius: '20px',
+    padding: '28px',
+    boxShadow: '0 24px 80px rgba(14, 23, 42, 0.18)',
+  },
+  header: { textAlign: 'center', marginBottom: '18px' },
+  logoBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '10px 16px',
+    borderRadius: '999px',
+    background: 'linear-gradient(135deg, #6C3FC5 0%, #4A90D9 100%)',
+    color: '#ffffff',
+    fontWeight: 800,
+    marginBottom: '12px',
+  },
+  title: { margin: 0, fontSize: '1.6rem', color: '#111827' },
+  subtitle: { marginTop: '8px', color: '#6b7280' },
+  message: { marginBottom: '12px', padding: '12px', borderRadius: '12px', fontWeight: 700 },
+  error: { background: '#fff1f1', color: '#b42318', border: '1px solid #fecaca' },
+  success: { background: '#ecfdf3', color: '#047857', border: '1px solid #bbf7d0' },
+  form: { display: 'grid', gap: '14px' },
+  row: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' },
+  field: { display: 'flex', flexDirection: 'column', gap: '8px' },
+  label: { fontSize: '0.92rem', fontWeight: 700, color: '#374151' },
+  input: { padding: '12px 14px', borderRadius: '12px', border: '1px solid #e6e6fa', background: '#fafafa' },
+  button: { width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #6C3FC5 0%, #4A90D9 100%)', color: '#fff', fontWeight: 800, boxShadow: '0 12px 30px rgba(108,63,197,0.18)' },
+  footerText: { marginTop: '14px', textAlign: 'center', color: '#6b7280' },
+  footerLink: { color: '#6C3FC5', fontWeight: 800 },
+};
 
 export default SignupPage;
