@@ -283,9 +283,7 @@ a {
   padding: 2rem;
 }
 
-/* ============================================
-   HOME PAGE
-   ============================================ */
+/*HOME PAGE*/
 .home-page {
   animation: fadeIn 0.5s ease-in;
 }
