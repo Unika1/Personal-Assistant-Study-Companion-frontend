@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import apiClient from '../services/api';
+import apiClient, { quizAPI } from '../services/api';
 
 // Get the student's name from localStorage so we can show it above their messages.
 function getStudentName() {
@@ -303,6 +303,20 @@ function ChatPage() {
       correct: isCorrectAnswer ? 1 : 0,
       total: 1,
     });
+
+    // Record this attempt in the backend so quizzes taken in chat also count
+    // toward the student's adaptive progress (same as the dedicated Quiz page).
+    // We ignore failures so the chat keeps working even if recording fails.
+    quizAPI
+      .submitAnswer({
+        topic: activeQuiz.topic,
+        question: activeQuiz.question,
+        correct: activeQuiz.correct,
+        studentAnswer: optionKey,
+        difficulty: activeQuiz.difficulty,
+        explanation: activeQuiz.explanation,
+      })
+      .catch(() => {});
   };
 
   // Finish the quiz card and show a short score summary in the chat.
