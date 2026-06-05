@@ -1,17 +1,28 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate, NavLink, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import '../styles/App.css';
 import LoginPage from '../pages/LoginPage';
 import SignupPage from '../pages/SignupPage';
 import HomePage from '../pages/HomePage';
 import ChatPage from '../pages/ChatPage';
+import AccountPage from '../pages/AccountPage';
+import StudyMaterialPage from '../pages/StudyMaterialPage';
+import QuizPage from '../pages/QuizPage';
+import ProgressPage from '../pages/ProgressPage';
 
 // This small header component decides which links to show based on login state.
 function AppHeader() {
   // Get the navigate function so we can move to the login page after logout.
   const navigate = useNavigate();
 
-  // Read the token from localStorage.
+  // Subscribe this header to route changes. Without this the header only reads
+  // the login state once, so the Study/Quiz/Progress links would not appear
+  // right after logging in (they would only show after a manual refresh).
+  // Reading the location here forces the header to re-render on every
+  // navigation, so it always reflects the current login state.
+  useLocation();
+
+  // Read the token from localStorage to decide if the student is logged in.
   const isLoggedIn = Boolean(localStorage.getItem('token'));
 
   // Remove the token and send the user back to the login page.
@@ -32,9 +43,26 @@ function AppHeader() {
             Home
           </NavLink>
 
-          <NavLink to="/chat" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-            Chat
-          </NavLink>
+          {/* Core study features are only shown to logged-in students. */}
+          {isLoggedIn && (
+            <>
+              <NavLink to="/study" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                Study
+              </NavLink>
+
+              <NavLink to="/quiz" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                Quiz
+              </NavLink>
+
+              <NavLink to="/progress" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                Progress
+              </NavLink>
+
+              <NavLink to="/chat" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                Chat
+              </NavLink>
+            </>
+          )}
 
           {/* Only show Login and Signup when the user is not logged in. */}
           {!isLoggedIn && (
@@ -53,7 +81,9 @@ function AppHeader() {
         <div className="nav-right">
           {isLoggedIn ? (
             <>
-              <span className="user-name">{localStorage.getItem('name') || 'Account'}</span>
+              <NavLink to="/account" className="user-name">
+                {localStorage.getItem('name') || 'Account'}
+              </NavLink>
               <button type="button" className="logout-btn" onClick={handleLogout}>Logout</button>
             </>
           ) : null}
@@ -75,6 +105,10 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/chat" element={<ChatPage />} />
+          <Route path="/study" element={<StudyMaterialPage />} />
+          <Route path="/quiz" element={<QuizPage />} />
+          <Route path="/progress" element={<ProgressPage />} />
+          <Route path="/account" element={<AccountPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
