@@ -43,7 +43,10 @@ a {
 
 .nav-right { flex: 0 0 auto; display:flex; align-items:center; gap:12px; margin-left: 1rem }
 
-.nav-link {
+/* Scoped to .app-nav so the legacy ".navbar .nav-link { color: white }" rule
+   lower in this file cannot override the header link colour. Without this
+   scoping the links render white-on-white and only appear on hover. */
+.app-nav .nav-link {
   background: none;
   border: none;
   color: #374151;
@@ -54,10 +57,10 @@ a {
   position: relative;
 }
 
-.nav-link:hover { color: #3b3267 }
+.app-nav .nav-link:hover { color: #3b3267 }
 
-.nav-link.active { color: #6C3FC5 }
-.nav-link.active::after { content: ''; position: absolute; height: 3px; left: 0; right: 0; bottom: -8px; background: linear-gradient(90deg,#6C3FC5,#4A90D9); border-radius: 3px }
+.app-nav .nav-link.active { color: #6C3FC5 }
+.app-nav .nav-link.active::after { content: ''; position: absolute; height: 3px; left: 0; right: 0; bottom: -8px; background: linear-gradient(90deg,#6C3FC5,#4A90D9); border-radius: 3px }
 
 .user-name { font-weight:700; color:#374151 }
 .logout-btn { background: #fff; border: 1px solid #eee; padding: 8px 12px; border-radius: 10px; cursor: pointer }
