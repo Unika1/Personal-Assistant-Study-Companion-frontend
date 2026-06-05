@@ -44,24 +44,27 @@ export const userAPI = {
 };
 
 
-// STUDY ENDPOINTS 
+// STUDY ENDPOINTS
+// Ask the backend for an AI explanation of a topic at a chosen level.
 
 export const studyAPI = {
-  // Generate study material
-  generateMaterial: (topic, level) =>
-    apiClient.post('/study/generate-material', { topic, level }),
+  explainTopic: (topic, level) =>
+    apiClient.post('/study/explain', { topic, level }),
+};
 
-  // Generate quiz
-  generateQuiz: (topic, count) =>
-    apiClient.post('/study/generate-quiz', { topic, count }),
 
-  // Ask question
-  askQuestion: (question, context) =>
-    apiClient.post('/study/ask-question', { question, context }),
+// QUIZ ENDPOINTS
+// These power the adaptive Quiz page and the Progress dashboard.
 
-  // Create study plan
-  createStudyPlan: (topics, duration) =>
-    apiClient.post('/study/create-plan', { topics, duration }),
+export const quizAPI = {
+  // Generate one adaptive quiz question (topic is optional).
+  generateQuiz: (topic) => apiClient.post('/quiz/generate', { topic }),
+
+  // Submit the student's chosen answer so it gets graded and recorded.
+  submitAnswer: (answerData) => apiClient.post('/quiz/answer', answerData),
+
+  // Get the student's progress summary and per-topic statistics.
+  getStats: () => apiClient.get('/quiz/stats'),
 };
 
 // ============================================
