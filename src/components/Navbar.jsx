@@ -10,7 +10,7 @@ function Navbar({ currentPage, setCurrentPage }) {
         {/* Logo */}
         <div className="navbar-logo">
           <h1 onClick={() => setCurrentPage('home')}>
-            📚 PASC
+            PASC
           </h1>
           <p>Personal AI Study Companion</p>
         </div>
