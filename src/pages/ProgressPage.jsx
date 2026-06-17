@@ -171,6 +171,7 @@ function ProgressPage() {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
+                        gap: 12,
                         padding: '12px 14px',
                         borderRadius: 14,
                         background: colors.dangerBg,
@@ -260,12 +261,6 @@ function ProgressPage() {
               </div>
             </div>
 
-            {/* A clear next action. */}
-            <div style={{ textAlign: 'center' }}>
-              <Link to="/quiz" style={{ ...primaryButton, textDecoration: 'none' }}>
-                Practise a Weak Topic
-              </Link>
-            </div>
           </>
         )}
       </div>
