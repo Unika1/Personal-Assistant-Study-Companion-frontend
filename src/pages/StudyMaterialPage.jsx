@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { studyAPI } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { studyAPI, SUGGESTED_TOPICS, addRecentTopic } from '../services/api';
+import RichText from '../components/RichText';
 import {
   colors,
   card,
@@ -18,8 +20,12 @@ function StudyMaterialPage() {
   const [topic, setTopic] = useState('');
   const [level, setLevel] = useState('beginner');
   const [explanation, setExplanation] = useState('');
+  const [studiedTopic, setStudiedTopic] = useState(''); // the topic actually explained
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Lets us jump to the Quiz page seeded with the topic just studied.
+  const navigate = useNavigate();
 
   // Ask the backend to explain the topic.
   const handleGenerate = async (event) => {
@@ -35,13 +41,26 @@ function StudyMaterialPage() {
       setError('');
       setExplanation('');
 
-      const response = await studyAPI.explainTopic(topic.trim(), level);
+      const cleanTopic = topic.trim();
+      const response = await studyAPI.explainTopic(cleanTopic, level);
       setExplanation(response.data?.explanation || '');
+
+      // Remember what was just studied so the quiz can be specific to it, and
+      // record it in the recent-topics list shared with the Quiz page.
+      setStudiedTopic(cleanTopic);
+      addRecentTopic(cleanTopic);
     } catch (err) {
       setError(err?.response?.data?.error || 'Could not generate the explanation.');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Send the student to the Quiz page with the topic they just studied so the
+  // quiz is about that exact topic (not a generic question).
+  const handleQuizOnThis = () => {
+    if (!studiedTopic) return;
+    navigate(`/quiz?topic=${encodeURIComponent(studiedTopic)}`);
   };
 
   return (
@@ -91,6 +110,30 @@ function StudyMaterialPage() {
                 style={input}
                 disabled={loading}
               />
+
+              {/* Topic selection: click a chip to fill the topic instantly. */}
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+                {SUGGESTED_TOPICS.map((suggested) => (
+                  <button
+                    key={suggested}
+                    type="button"
+                    onClick={() => setTopic(suggested)}
+                    disabled={loading}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 999,
+                      border: `1px solid ${colors.border}`,
+                      background: topic === suggested ? '#f5f0ff' : '#fff',
+                      color: topic === suggested ? colors.primary : colors.body,
+                      fontWeight: 700,
+                      fontSize: 13,
+                      cursor: loading ? 'default' : 'pointer',
+                    }}
+                  >
+                    {suggested}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div style={{ display: 'grid', gap: 8 }}>
@@ -140,17 +183,22 @@ function StudyMaterialPage() {
             <h2 style={{ margin: '0 0 12px', fontSize: '1.1rem', color: colors.heading }}>
               Explanation
             </h2>
-            {/* Split the AI text into paragraphs so it is easy to read. */}
-            <div style={{ color: colors.body, lineHeight: 1.7 }}>
-              {explanation
-                .split('\n')
-                .filter((line) => line.trim() !== '')
-                .map((line, index) => (
-                  <p key={index} style={{ margin: '0 0 10px' }}>
-                    {line}
-                  </p>
-                ))}
-            </div>
+            {/* RichText turns the AI text into clean headings, bullets and
+                paragraphs instead of showing raw markdown symbols. */}
+            <RichText text={explanation} />
+
+            {/* Turn studying into practice: quiz the student on the exact topic
+                they just read, so the quiz is specific rather than generic. */}
+            {studiedTopic && (
+              <div style={{ marginTop: 16, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                <button type="button" onClick={handleQuizOnThis} style={primaryButton}>
+                  📝 Quiz me on {studiedTopic}
+                </button>
+                <span style={{ color: colors.muted, fontSize: 13 }}>
+                  Test what you just studied.
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>
