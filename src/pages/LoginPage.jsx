@@ -32,6 +32,13 @@ function LoginPage() {
       // Save the token in localStorage so we can use it later.
       localStorage.setItem('token', response.data.token);
 
+      // Load the student's saved language preference from their account so the
+      // choice they made on another device/browser is restored on this one.
+      const savedLanguage = response.data?.user?.language;
+      if (savedLanguage === 'en' || savedLanguage === 'ne') {
+        localStorage.setItem('language', savedLanguage);
+      }
+
       // Show a simple success message and redirect after a short delay.
       setSuccess('Login successful. Redirecting...');
       setTimeout(() => {
