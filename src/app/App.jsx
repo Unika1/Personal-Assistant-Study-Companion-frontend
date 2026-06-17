@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import '../styles/App.css';
+import { getLanguage, setLanguage } from '../services/api';
 import LoginPage from '../pages/LoginPage';
 import SignupPage from '../pages/SignupPage';
 import HomePage from '../pages/HomePage';
@@ -24,6 +25,15 @@ function AppHeader() {
 
   // Read the token from localStorage to decide if the student is logged in.
   const isLoggedIn = Boolean(localStorage.getItem('token'));
+
+  // The chosen reply language for PASC ('en' or 'ne'). Kept in localStorage via
+  // setLanguage so every page and every AI request uses the same choice.
+  const [language, setLanguageState] = useState(getLanguage());
+
+  const handleLanguageChange = (nextLanguage) => {
+    setLanguage(nextLanguage);
+    setLanguageState(nextLanguage);
+  };
 
   // Remove the token and send the user back to the login page.
   const handleLogout = () => {
@@ -79,6 +89,25 @@ function AppHeader() {
         </div>
 
         <div className="nav-right">
+          {/* Language toggle: switches PASC replies between English and Nepali.
+              Shown to everyone so the choice can be made before logging in. */}
+          <div className="lang-toggle" role="group" aria-label="Reply language">
+            <button
+              type="button"
+              className={`lang-btn ${language === 'en' ? 'active' : ''}`}
+              onClick={() => handleLanguageChange('en')}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              className={`lang-btn ${language === 'ne' ? 'active' : ''}`}
+              onClick={() => handleLanguageChange('ne')}
+            >
+              नेपाली
+            </button>
+          </div>
+
           {isLoggedIn ? (
             <>
               <NavLink to="/account" className="user-name">
