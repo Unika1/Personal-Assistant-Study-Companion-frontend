@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { quizAPI } from '../services/api';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { quizAPI, SUGGESTED_TOPICS, getRecentTopics, addRecentTopic } from '../services/api';
 import {
   colors,
   card,
@@ -43,8 +43,33 @@ function QuizPage() {
   const [submitting, setSubmitting] = useState(false); // sending an answer
   const [error, setError] = useState('');
 
+  // Topics the student recently studied, offered as quick quiz shortcuts.
+  const [recentTopics] = useState(() => getRecentTopics());
+
+  // Read ?topic=... from the URL (set when the student clicks "Quiz me on this"
+  // from the Study page) so the quiz can start on that exact topic.
+  const [searchParams] = useSearchParams();
+
+  // When we arrive from a "Practise"/"Quiz me on this" link, remember which
+  // topic we were sent to practise so we can clearly show it on the page.
+  const [practisingTopic, setPractisingTopic] = useState('');
+
+  // The topic the current practice run is "locked" to. Once a question is on a
+  // topic, "Next Question" stays on that SAME topic so the student builds up
+  // several attempts on it. This is what lets weak topics be detected: a topic
+  // only counts as weak after 3+ attempts below 60%, which can never happen if
+  // every question jumps to a different topic.
+  const sessionTopicRef = useRef('');
+
   // Ask the backend for one adaptive question.
-  const generateQuestion = async () => {
+  // Topic priority: an explicit topic passed in (chip / Study page / weak-topic
+  // link) > whatever is typed in the box > the topic this run is locked to.
+  // The string guard also makes it safe to use directly as an onClick handler.
+  const generateQuestion = useCallback(async (overrideTopic) => {
+    const explicit = typeof overrideTopic === 'string' ? overrideTopic.trim() : '';
+    const typed = topic.trim();
+    const useTopic = explicit || typed || sessionTopicRef.current;
+
     try {
       setLoading(true);
       setError('');
@@ -52,7 +77,7 @@ function QuizPage() {
       setSelectedOption('');
       setResult(null);
 
-      const response = await quizAPI.generateQuiz(topic.trim());
+      const response = await quizAPI.generateQuiz(useTopic);
       const newQuiz = response.data?.quiz;
 
       // Make sure we actually received a usable quiz question.
@@ -61,13 +86,53 @@ function QuizPage() {
         return;
       }
 
+      // Lock this run to the topic we just got a question on, so "Next Question"
+      // stays on it. We prefer the topic we asked for; if we asked for nothing
+      // (cold start), we lock to whatever topic the question came back as.
+      const lockedTopic = useTopic || newQuiz.topic || '';
+      sessionTopicRef.current = lockedTopic;
+
+      // Reflect the locked topic in the input + banner so the student can see
+      // what they are practising (and can change it whenever they want).
+      if (lockedTopic) {
+        setTopic(lockedTopic);
+        setPractisingTopic(lockedTopic);
+        addRecentTopic(lockedTopic);
+      }
+
       setQuiz(newQuiz);
     } catch (err) {
       setError(err?.response?.data?.error || 'Could not generate a question.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [topic]);
+
+  // Remember the last topic we auto-generated for, so we fire exactly once per
+  // incoming ?topic= value (and not on every re-render).
+  const lastAutoTopicRef = useRef('');
+
+  // If we arrive with a ?topic= (from the Study page or a "Practise" button on
+  // Progress), seed the input and immediately generate a question on that exact
+  // topic. Depending on searchParams means this also works when the student is
+  // already on the Quiz page and clicks another "Practise" link.
+  useEffect(() => {
+    const urlTopic = (searchParams.get('topic') || '').trim();
+    const auto = searchParams.get('auto');
+
+    if (urlTopic && lastAutoTopicRef.current !== urlTopic) {
+      // A specific topic was requested (e.g. a weak topic to practise).
+      lastAutoTopicRef.current = urlTopic;
+      setTopic(urlTopic);
+      setPractisingTopic(urlTopic);
+      generateQuestion(urlTopic);
+    } else if (auto && lastAutoTopicRef.current !== '__auto__') {
+      // No specific topic, but we were asked to start practising: generate with
+      // a blank topic so the backend picks the area the student most needs.
+      lastAutoTopicRef.current = '__auto__';
+      generateQuestion('');
+    }
+  }, [searchParams, generateQuestion]);
 
   // Send the chosen answer to the backend to be graded and recorded.
   const submitAnswer = async () => {
@@ -182,6 +247,31 @@ function QuizPage() {
           )}
         </div>
 
+        {/* Banner shown when the student was sent here to practise a specific
+            (usually weak) topic, so it is clear what they are practising. */}
+        {practisingTopic && (
+          <div
+            style={{
+              ...card,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              background: '#f5f0ff',
+              border: `1px solid ${colors.primary}`,
+              color: colors.heading,
+              fontWeight: 700,
+            }}
+          >
+            🎯 Practising:&nbsp;
+            <span style={{ color: colors.primary, textTransform: 'capitalize' }}>
+              {practisingTopic}
+            </span>
+            <span style={{ marginLeft: 8, color: colors.muted, fontWeight: 600, fontSize: 13 }}>
+              — keep answering to build up this topic
+            </span>
+          </div>
+        )}
+
         {/* Topic chooser */}
         <div style={card}>
           <label style={{ display: 'block', fontWeight: 700, color: colors.body, marginBottom: 8 }}>
@@ -208,6 +298,66 @@ function QuizPage() {
           <p style={{ margin: '10px 0 0', color: colors.muted, fontSize: 13 }}>
             Leave the topic blank and PASC will pick the area you most need to practise.
           </p>
+
+          {/* Recently studied topics: quiz on exactly what you just learned. */}
+          {recentTopics.length > 0 && (
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontWeight: 700, color: colors.body, marginBottom: 8, fontSize: 13 }}>
+                Quiz on what you recently studied
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {recentTopics.map((recent) => (
+                  <button
+                    key={recent}
+                    type="button"
+                    onClick={() => { setTopic(recent); generateQuestion(recent); }}
+                    disabled={loading}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 999,
+                      border: `1px solid ${colors.primary}`,
+                      background: '#f5f0ff',
+                      color: colors.primary,
+                      fontWeight: 700,
+                      fontSize: 13,
+                      cursor: loading ? 'default' : 'pointer',
+                    }}
+                  >
+                    {recent}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Topic selection: pick a common topic without typing. */}
+          <div style={{ marginTop: 14 }}>
+            <div style={{ fontWeight: 700, color: colors.body, marginBottom: 8, fontSize: 13 }}>
+              Or pick a topic
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {SUGGESTED_TOPICS.map((suggested) => (
+                <button
+                  key={suggested}
+                  type="button"
+                  onClick={() => setTopic(suggested)}
+                  disabled={loading}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 999,
+                    border: `1px solid ${colors.border}`,
+                    background: topic === suggested ? '#f5f0ff' : '#fff',
+                    color: topic === suggested ? colors.primary : colors.body,
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: loading ? 'default' : 'pointer',
+                  }}
+                >
+                  {suggested}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Error message */}
@@ -337,6 +487,13 @@ function QuizPage() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Visible loading state so generating never looks like a blank page. */}
+        {loading && !quiz && (
+          <div style={{ ...card, textAlign: 'center', color: colors.primary, fontWeight: 700 }}>
+            ⏳ Generating your question{practisingTopic ? ` on ${practisingTopic}` : ''}...
           </div>
         )}
 
