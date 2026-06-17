@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import apiClient, { quizAPI } from '../services/api';
+import apiClient, { quizAPI, getLanguage } from '../services/api';
 
 // Get the student's name from localStorage so we can show it above their messages.
 function getStudentName() {
@@ -348,6 +348,7 @@ function ChatPage() {
       const payload = {
         message: text,
         history,
+        language: getLanguage(),
       };
 
       if (activeSessionId) {
