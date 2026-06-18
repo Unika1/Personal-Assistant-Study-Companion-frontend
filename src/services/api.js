@@ -24,6 +24,69 @@ apiClient.interceptors.request.use((config) => {
 });
 
 
+// LANGUAGE PREFERENCE
+// The student's chosen reply language ('en' or 'ne') is kept in localStorage so
+// it persists across pages and page reloads. Every AI request reads it through
+// getLanguage() and sends it to the backend.
+
+export const getLanguage = () => localStorage.getItem('language') || 'en';
+
+// Save the language choice. localStorage is kept as a fast local cache, but the
+// account on the server is the source of truth: when the student is logged in we
+// also persist the choice to their profile so it follows them across devices.
+// The server call is fire-and-forget so the UI updates instantly.
+export const setLanguage = (language) => {
+  const normalized = language === 'ne' ? 'ne' : 'en';
+  localStorage.setItem('language', normalized);
+
+  if (localStorage.getItem('token')) {
+    apiClient.put('/users/profile', { language: normalized }).catch(() => {});
+  }
+
+  return normalized;
+};
+
+
+// TOPIC SELECTION & RECENTLY STUDIED TOPICS
+// These power the lecturer's request: let students PICK a topic to study, and
+// make quizzes specific to what they JUST studied instead of generic.
+
+// A starter list of common tech-study topics shown as clickable chips so the
+// student can select a topic instead of always typing one.
+export const SUGGESTED_TOPICS = [
+  'Arrays', 'Pointers', 'Recursion', 'Big-O Notation', 'Linked Lists',
+  'Stacks & Queues', 'SQL Joins', 'OOP', 'HTTP', 'Binary Search',
+];
+
+// Remember the topics a student has recently studied (most recent first), kept
+// in localStorage. The Quiz page reads these so it can offer a quiz on exactly
+// what the student just studied.
+const RECENT_TOPICS_KEY = 'recentTopics';
+
+export const getRecentTopics = () => {
+  try {
+    const stored = JSON.parse(localStorage.getItem(RECENT_TOPICS_KEY) || '[]');
+    return Array.isArray(stored) ? stored : [];
+  } catch (error) {
+    return [];
+  }
+};
+
+export const addRecentTopic = (topic) => {
+  const clean = String(topic || '').trim();
+  if (!clean) return getRecentTopics();
+
+  // Put the new topic first, drop any duplicate (case-insensitive), keep 5.
+  const existing = getRecentTopics().filter(
+    (item) => item.toLowerCase() !== clean.toLowerCase()
+  );
+  const updated = [clean, ...existing].slice(0, 5);
+
+  localStorage.setItem(RECENT_TOPICS_KEY, JSON.stringify(updated));
+  return updated;
+};
+
+
 // USER ENDPOINTS
 
 export const userAPI = {
@@ -49,7 +112,7 @@ export const userAPI = {
 
 export const studyAPI = {
   explainTopic: (topic, level) =>
-    apiClient.post('/study/explain', { topic, level }),
+    apiClient.post('/study/explain', { topic, level, language: getLanguage() }),
 };
 
 
@@ -58,7 +121,7 @@ export const studyAPI = {
 
 export const quizAPI = {
   // Generate one adaptive quiz question (topic is optional).
-  generateQuiz: (topic) => apiClient.post('/quiz/generate', { topic }),
+  generateQuiz: (topic) => apiClient.post('/quiz/generate', { topic, language: getLanguage() }),
 
   // Submit the student's chosen answer so it gets graded and recorded.
   submitAnswer: (answerData) => apiClient.post('/quiz/answer', answerData),
